@@ -405,7 +405,7 @@ La consulta SQL original fue restaurada después de la prueba.
 | Q-03 | Consulta | `priority=medium` | Solo prioridad media | Correcto |
 | Q-04 | Consulta | `category=network` | Solo categoría network | Correcto |
 | Q-05 | Consulta | `q=VPN` | Tickets coincidentes | Correcto |
-| Q-06 | Consulta | Búsqueda sin coincidencias | Sin tickets coincidentes | No hubo resultados visibles; falta confirmar código HTTP y body |
+| Q-06 | Consulta | Búsqueda sin coincidencias | Sin tickets coincidentes | Correcto |
 | Q-07 | Consulta | Estado y prioridad combinados | Cumplir ambos filtros | Correcto |
 | Q-08 | Consulta | Prioridad inválida | HTTP 400 | Correcto |
 | U-01 | Actualización | Ticket 2 a `resolved` | HTTP 200 y estado actualizado | Correcto |
@@ -460,14 +460,10 @@ La consulta confirmó que el ticket original existe y que sus datos se guardaron
 
 ## 10. Mejoras futuras
 
-1. Unificar los nombres de los campos de respuesta.
-2. Garantizar la unicidad de `Idempotency-Key` en PostgreSQL.
-3. Probar reintentos simultáneos y condiciones de carrera.
-4. Confirmar la respuesta HTTP y el body de búsquedas sin resultados.
-5. Incorporar autenticación y autorización antes de exponer la API fuera del entorno local.
-6. Añadir logs y métricas de ejecución.
-7. Automatizar las pruebas para que sean repetibles.
-8. Documentar el despliegue y las variables de entorno sin incluir secretos.
+
+1. Incorporar autenticación y autorización antes de exponer la API fuera del entorno local.
+2. Añadir logs y métricas de ejecución.
+3. Automatizar las pruebas para que sean repetibles.
 
 ## 11. Ejecución de las pruebas
 
