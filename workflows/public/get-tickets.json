@@ -1,0 +1,221 @@
+﻿{
+    "name":  "Smart IT Helpdesk - Consultar Tickets-GET.",
+    "nodes":  [
+                  {
+                      "parameters":  {
+                                         "path":  "tickets",
+                                         "responseMode":  "responseNode",
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.webhook",
+                      "typeVersion":  2.2,
+                      "position":  [
+                                       -512,
+                                       128
+                                   ],
+                      "id":  "bdee3712-4fe1-49d5-83d3-6262cf215e84",
+                      "name":  "Webhook",
+                      "webhookId":  "9daa4970-ee9a-4607-ad28-0e79f47c9a7f"
+                  },
+                  {
+                      "parameters":  {
+                                         "operation":  "executeQuery",
+                                         "query":  "SELECT\n    id,\n    title,\n    description,\n    requester,\n    category,\n    priority,\n    summary,\n    suggested_actions,\n    requires_human_review,\n    status\nFROM tickets\nWHERE ($1::text IS NULL OR status = $1)\n  AND ($2::text IS NULL OR priority = $2)\n  AND ($3::text IS NULL OR category = $3)\n  AND (\n      $4::text IS NULL\n      OR title ILIKE \u0027%\u0027 || $4 || \u0027%\u0027\n      OR description ILIKE \u0027%\u0027 || $4 || \u0027%\u0027\n      OR summary ILIKE \u0027%\u0027 || $4 || \u0027%\u0027\n  )\nORDER BY id DESC\nLIMIT 100;",
+                                         "options":  {
+                                                         "queryReplacement":  "={{ [   $json.query?.status || null,   $json.query?.priority || null,   $json.query?.category || null,   $json.query?.q || null ] }}"
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.postgres",
+                      "typeVersion":  2.7,
+                      "position":  [
+                                       160,
+                                       32
+                                   ],
+                      "id":  "83569690-369e-4d5f-bd82-2de2b006bcb1",
+                      "name":  "Execute a SQL query",
+                      "onError":  "continueErrorOutput"
+                  },
+                  {
+                      "parameters":  {
+                                         "respondWith":  "json",
+                                         "responseBody":  "={{ $input.all().map(item =\u003e item.json) }}",
+                                         "options":  {
+                                                         "responseCode":  200
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.respondToWebhook",
+                      "typeVersion":  1.5,
+                      "position":  [
+                                       384,
+                                       -64
+                                   ],
+                      "id":  "0a5e44ea-8bd5-40b5-8075-7f1ed9a2565b",
+                      "name":  "Respond to Webhook"
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "\nconst input = $input.first().json;\nconst query = input.query ?? {};\n\nconst allowedStatuses = [\n  \u0027open\u0027,\n  \u0027in_progress\u0027,\n  \u0027resolved\u0027,\n  \u0027closed\u0027,\n];\n\nconst allowedPriorities = [\n  \u0027low\u0027,\n  \u0027medium\u0027,\n  \u0027high\u0027,\n  \u0027critical\u0027,\n];\n\nconst allowedCategories = [\n  \u0027network\u0027,\n  \u0027security\u0027,\n  \u0027software\u0027,\n  \u0027hardware\u0027,\n  \u0027access\u0027,\n  \u0027other\u0027,\n];\n\nconst errors = [];\n\nfunction validateEnum(field, allowedValues) {\n  const value = query[field];\n\n  if (value === undefined || value === \u0027\u0027) {\n    return;\n  }\n\n  if (\n    typeof value !== \u0027string\u0027 ||\n    !allowedValues.includes(value.toLowerCase())\n  ) {\n    errors.push(\n      `El parÃ¡metro \u0027${field}\u0027 no tiene un valor vÃ¡lido.`\n    );\n  }\n}\n\nvalidateEnum(\u0027status\u0027, allowedStatuses);\nvalidateEnum(\u0027priority\u0027, allowedPriorities);\nvalidateEnum(\u0027category\u0027, allowedCategories);\n\nif (\n  query.q !== undefined \u0026\u0026\n  (\n    typeof query.q !== \u0027string\u0027 ||\n    query.q.length \u003e 100\n  )\n) {\n  errors.push(\n    \"El parÃ¡metro \u0027q\u0027 debe tener como mÃ¡ximo 100 caracteres.\"\n  );\n}\n\nreturn [\n  {\n    json: {\n      ...input,\n      validationError: errors.length\n        ? errors.join(\u0027 \u0027)\n        : null,\n    },\n  },\n];\n"
+                                     },
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       -288,
+                                       128
+                                   ],
+                      "id":  "12eb6ea5-092d-4b6f-bf13-d17e9e3a0d07",
+                      "name":  "Code in JavaScript"
+                  },
+                  {
+                      "parameters":  {
+                                         "conditions":  {
+                                                            "options":  {
+                                                                            "caseSensitive":  true,
+                                                                            "leftValue":  "",
+                                                                            "typeValidation":  "strict",
+                                                                            "version":  3
+                                                                        },
+                                                            "conditions":  [
+                                                                               {
+                                                                                   "id":  "ac4f222f-b8dc-4d91-8957-305524d211f6",
+                                                                                   "leftValue":  "={{ $json.validationError === null }}",
+                                                                                   "rightValue":  "",
+                                                                                   "operator":  {
+                                                                                                    "type":  "boolean",
+                                                                                                    "operation":  "true",
+                                                                                                    "singleValue":  true
+                                                                                                }
+                                                                               }
+                                                                           ],
+                                                            "combinator":  "and"
+                                                        },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.if",
+                      "typeVersion":  2.3,
+                      "position":  [
+                                       -64,
+                                       128
+                                   ],
+                      "id":  "792597b1-e5c4-4fab-b222-de6023b48311",
+                      "name":  "If"
+                  },
+                  {
+                      "parameters":  {
+                                         "respondWith":  "json",
+                                         "responseBody":  "={{ {\n  \"success\": false,\n  \"error\": \"VALIDATION_ERROR\",\n  \"message\": $json.validationError\n} }}",
+                                         "options":  {
+                                                         "responseCode":  400
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.respondToWebhook",
+                      "typeVersion":  1.5,
+                      "position":  [
+                                       160,
+                                       224
+                                   ],
+                      "id":  "7e651c7b-d2db-43bb-b235-60da8d1b4573",
+                      "name":  "Error 400"
+                  },
+                  {
+                      "parameters":  {
+                                         "respondWith":  "json",
+                                         "responseBody":  "={{ {\n  \"success\": false,\n  \"error\": \"DATABASE_ERROR\",\n  \"message\": \"No se pudo consultar la base de datos.\"\n} }}",
+                                         "options":  {
+                                                         "responseCode":  500
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.respondToWebhook",
+                      "typeVersion":  1.5,
+                      "position":  [
+                                       384,
+                                       128
+                                   ],
+                      "id":  "4ea91075-a543-4f0e-904b-b18ffb9fce0d",
+                      "name":  "error 500"
+                  }
+              ],
+    "pinData":  {
+
+                },
+    "connections":  {
+                        "Webhook":  {
+                                        "main":  [
+                                                     [
+                                                         {
+                                                             "node":  "Code in JavaScript",
+                                                             "type":  "main",
+                                                             "index":  0
+                                                         }
+                                                     ]
+                                                 ]
+                                    },
+                        "Execute a SQL query":  {
+                                                    "main":  [
+                                                                 [
+                                                                     {
+                                                                         "node":  "Respond to Webhook",
+                                                                         "type":  "main",
+                                                                         "index":  0
+                                                                     }
+                                                                 ],
+                                                                 [
+                                                                     {
+                                                                         "node":  "error 500",
+                                                                         "type":  "main",
+                                                                         "index":  0
+                                                                     }
+                                                                 ]
+                                                             ]
+                                                },
+                        "Code in JavaScript":  {
+                                                   "main":  [
+                                                                [
+                                                                    {
+                                                                        "node":  "If",
+                                                                        "type":  "main",
+                                                                        "index":  0
+                                                                    }
+                                                                ]
+                                                            ]
+                                               },
+                        "If":  {
+                                   "main":  [
+                                                [
+                                                    {
+                                                        "node":  "Execute a SQL query",
+                                                        "type":  "main",
+                                                        "index":  0
+                                                    }
+                                                ],
+                                                [
+                                                    {
+                                                        "node":  "Error 400",
+                                                        "type":  "main",
+                                                        "index":  0
+                                                    }
+                                                ]
+                                            ]
+                               }
+                    },
+    "active":  false,
+    "settings":  {
+                     "executionOrder":  "v1",
+                     "binaryMode":  "separate"
+                 },
+    "versionId":  "aa855ee3-aa9d-43a4-983f-313e084831ee",
+    "meta":  {
+                 "templateCredsSetupCompleted":  true,
+                 "instanceId":  "74e6b5b53352862e15bb8ea3bb3c725db9b0616e47c0a3afdf3b78b4eb06a1ca"
+             },
+    "nodeGroups":  [
+
+                   ],
+    "id":  "dtBiMncZslQzFWnO",
+    "tags":  [
+
+             ]
+}

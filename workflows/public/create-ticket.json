@@ -1,0 +1,1136 @@
+﻿{
+    "name":  "Smart IT Helpdesk",
+    "nodes":  [
+                  {
+                      "parameters":  {
+                                         "httpMethod":  "POST",
+                                         "path":  "chat-local",
+                                         "responseMode":  "responseNode",
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.webhook",
+                      "typeVersion":  2.2,
+                      "position":  [
+                                       -1760,
+                                       160
+                                   ],
+                      "id":  "063acbd4-f79a-482e-9e1e-a1105bc69991",
+                      "name":  "Webhook",
+                      "webhookId":  "969ca704-7da9-49cb-82ee-88973a32eaba"
+                  },
+                  {
+                      "parameters":  {
+                                         "method":  "POST",
+                                         "url":  "http://host.docker.internal:11434/api/generate",
+                                         "sendBody":  true,
+                                         "specifyBody":  "json",
+                                         "jsonBody":  "=\n{\n  \"model\": \"llama3.2:3b\",\n  \"prompt\": \"Clasifica este incidente IT. Devuelve solo JSON con las propiedades category, priority, summary, suggestedActions y requiresHumanReview. category: hardware, software, network, access, security u other. priority: low, medium, high o critical. summary: mÃ¡ximo 15 palabras. suggestedActions: array de 1 a 3 acciones breves y seguras. requiresHumanReview: boolean. Si faltan datos, no inventes la causa y solicita revisiÃ³n humana.\\n\\nIncidente: {{ $(\u0027Validar entrada\u0027).first().json.body.message }}\",\n  \"format\": \"json\",\n  \"stream\": false,\n  \"keep_alive\": \"10m\",\n  \"options\": {\n    \"num_predict\": 120\n  }\n}\n",
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.httpRequest",
+                      "typeVersion":  4.5,
+                      "position":  [
+                                       -640,
+                                       -224
+                                   ],
+                      "id":  "74163749-3a6e-4447-a880-23afae1a0da1",
+                      "name":  "HTTP Request",
+                      "retryOnFail":  true,
+                      "waitBetweenTries":  2000,
+                      "onError":  "continueErrorOutput"
+                  },
+                  {
+                      "parameters":  {
+                                         "assignments":  {
+                                                             "assignments":  [
+                                                                                 {
+                                                                                     "id":  "ab4f5bb6-aaf3-4767-855f-310144dec683",
+                                                                                     "name":  "success",
+                                                                                     "value":  true,
+                                                                                     "type":  "boolean"
+                                                                                 },
+                                                                                 {
+                                                                                     "id":  "95e05999-fc2d-4ff3-a037-c297e1658843",
+                                                                                     "name":  "ticketId",
+                                                                                     "value":  "={{ Number($json.id) }}",
+                                                                                     "type":  "number"
+                                                                                 },
+                                                                                 {
+                                                                                     "id":  "032872f0-f024-4d5d-be3a-a2b0689a5f97",
+                                                                                     "name":  "status",
+                                                                                     "value":  "={{ $json.status }}",
+                                                                                     "type":  "string"
+                                                                                 },
+                                                                                 {
+                                                                                     "id":  "77d2e15a-3fe7-43f5-bb8c-338e6cef03f5",
+                                                                                     "name":  "message",
+                                                                                     "value":  "=Ticket creado correctamente",
+                                                                                     "type":  "string"
+                                                                                 }
+                                                                             ]
+                                                         },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.set",
+                      "typeVersion":  3.5,
+                      "position":  [
+                                       480,
+                                       256
+                                   ],
+                      "id":  "7ffd83e3-b9bd-444d-a073-328fba8be75b",
+                      "name":  "Edit Fields"
+                  },
+                  {
+                      "parameters":  {
+                                         "conditions":  {
+                                                            "options":  {
+                                                                            "caseSensitive":  true,
+                                                                            "leftValue":  "",
+                                                                            "typeValidation":  "strict",
+                                                                            "version":  3
+                                                                        },
+                                                            "conditions":  [
+                                                                               {
+                                                                                   "id":  "0853bd25-619b-4d24-a785-d181425c7a29",
+                                                                                   "leftValue":  "={{$json.valid}}",
+                                                                                   "rightValue":  "",
+                                                                                   "operator":  {
+                                                                                                    "type":  "boolean",
+                                                                                                    "operation":  "true",
+                                                                                                    "singleValue":  true
+                                                                                                }
+                                                                               }
+                                                                           ],
+                                                            "combinator":  "and"
+                                                        },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.if",
+                      "typeVersion":  2.3,
+                      "position":  [
+                                       -1312,
+                                       160
+                                   ],
+                      "id":  "e6082841-696a-41cf-a6d3-31535c42d191",
+                      "name":  "If"
+                  },
+                  {
+                      "parameters":  {
+                                         "assignments":  {
+                                                             "assignments":  [
+                                                                                 {
+                                                                                     "id":  "f8dc3fa8-73f7-46cc-b06c-e32033d91189",
+                                                                                     "name":  "success",
+                                                                                     "value":  false,
+                                                                                     "type":  "boolean"
+                                                                                 },
+                                                                                 {
+                                                                                     "id":  "268f9d5b-90a0-4c5f-9994-cc69b6b164a0",
+                                                                                     "name":  "error",
+                                                                                     "value":  "={{ $json.error }}",
+                                                                                     "type":  "string"
+                                                                                 },
+                                                                                 {
+                                                                                     "id":  "5feb650b-f769-49f1-828e-6dfd1d7f3847",
+                                                                                     "name":  "message",
+                                                                                     "value":  "={{ $json.message }}",
+                                                                                     "type":  "string"
+                                                                                 }
+                                                                             ]
+                                                         },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.set",
+                      "typeVersion":  3.5,
+                      "position":  [
+                                       -1088,
+                                       256
+                                   ],
+                      "id":  "d324d70e-ef05-427a-9980-1e90471f8f62",
+                      "name":  "Edit Fields1"
+                  },
+                  {
+                      "parameters":  {
+                                         "respondWith":  "json",
+                                         "responseBody":  "={{ $json}}",
+                                         "options":  {
+                                                         "responseCode":  400
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.respondToWebhook",
+                      "typeVersion":  1.5,
+                      "position":  [
+                                       -864,
+                                       256
+                                   ],
+                      "id":  "7e7bcb21-e0c6-4d03-ab8d-1e3a38be902d",
+                      "name":  "Respond to Webhook"
+                  },
+                  {
+                      "parameters":  {
+                                         "assignments":  {
+                                                             "assignments":  [
+                                                                                 {
+                                                                                     "id":  "8bb5fd14-7792-4185-bf52-a21bcb720d28",
+                                                                                     "name":  "success",
+                                                                                     "value":  false,
+                                                                                     "type":  "boolean"
+                                                                                 },
+                                                                                 {
+                                                                                     "id":  "295fd53d-8cb5-46de-9bec-a185efaaf913",
+                                                                                     "name":  "error",
+                                                                                     "value":  "OLLAMA_UNAVAILABLE",
+                                                                                     "type":  "string"
+                                                                                 },
+                                                                                 {
+                                                                                     "id":  "0e28ec53-23ca-4acc-a30c-b4e6f1c832b0",
+                                                                                     "name":  "message",
+                                                                                     "value":  "El servicio de IA no estÃ¡ disponible. IntentÃ¡ nuevamente mÃ¡s tarde.",
+                                                                                     "type":  "string"
+                                                                                 }
+                                                                             ]
+                                                         },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.set",
+                      "typeVersion":  3.5,
+                      "position":  [
+                                       -416,
+                                       -416
+                                   ],
+                      "id":  "39438aa3-0b26-47b7-9aa8-8c38169fd403",
+                      "name":  "Edit Fields2"
+                  },
+                  {
+                      "parameters":  {
+                                         "assignments":  {
+                                                             "assignments":  [
+                                                                                 {
+                                                                                     "id":  "13c1cb22-7246-4d86-8a42-4f19574815c0",
+                                                                                     "name":  "success",
+                                                                                     "value":  false,
+                                                                                     "type":  "boolean"
+                                                                                 },
+                                                                                 {
+                                                                                     "id":  "ba24ab70-4eab-4a18-ba72-193f9fbd2c40",
+                                                                                     "name":  "error",
+                                                                                     "value":  "INVALID_AI_RESPONSE",
+                                                                                     "type":  "string"
+                                                                                 },
+                                                                                 {
+                                                                                     "id":  "4e12e884-16de-47db-a351-785425d9df8f",
+                                                                                     "name":  "message",
+                                                                                     "value":  "El servicio de IA devolviÃ³ una respuesta invÃ¡lida. IntentÃ¡ nuevamente mÃ¡s tarde.",
+                                                                                     "type":  "string"
+                                                                                 }
+                                                                             ]
+                                                         },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.set",
+                      "typeVersion":  3.5,
+                      "position":  [
+                                       -192,
+                                       -224
+                                   ],
+                      "id":  "a9fef826-d634-4d51-9a24-a798925b11d8",
+                      "name":  "Edit Fields3"
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "\nconst input = $input.first().json;\nconst body = input.body;\nconst headers = input.headers ?? {};\nconst idempotencyKey = headers[\u0027idempotency-key\u0027];\n\nlet error = null;\nlet message = \u0027\u0027;\n\nif (!body || typeof body !== \u0027object\u0027 || Array.isArray(body)) {\n  error = \u0027INVALID_BODY\u0027;\n  message = \u0027El cuerpo de la solicitud debe ser un objeto JSON\u0027;\n} else if (typeof body.message !== \u0027string\u0027) {\n  error = \u0027INVALID_MESSAGE\u0027;\n  message = \u0027El campo \"message\" es obligatorio y debe ser texto\u0027;\n} else if (body.message.trim().length === 0) {\n  error = \u0027EMPTY_MESSAGE\u0027;\n  message = \u0027El campo \"message\" no puede estar vacÃ­o\u0027;\n} else if (body.message.trim().length \u003e 2000) {\n  error = \u0027MESSAGE_TOO_LONG\u0027;\n  message = \u0027El campo \"message\" no puede superar los 2000 caracteres\u0027;\n} else if (\n  typeof idempotencyKey !== \u0027string\u0027 ||\n  !/^[a-zA-Z0-9_-]{8,255}$/.test(idempotencyKey)\n) {\n  error = \u0027INVALID_IDEMPOTENCY_KEY\u0027;\n  message = \u0027El encabezado Idempotency-Key es obligatorio y debe tener entre 8 y 255 caracteres alfanumÃ©ricos, guiones o guiones bajos\u0027;}\n\nif (error) {\n  return [\n    {\n      json: {\n        valid: false,\n        error,\n        message,\n      },\n    },\n  ];\n}\n\nreturn [\n  {\n    json: {\n      ...input,\n      valid: true,\n      idempotencyKey,\n      body: {\n        ...body,\n        message: body.message.trim(),\n      },\n    },\n  },\n];\n\n"
+                                     },
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       -1536,
+                                       160
+                                   ],
+                      "id":  "7ad0b6f7-0d92-4d7b-8b25-9aae83388a22",
+                      "name":  "Validar entrada"
+                  },
+                  {
+                      "parameters":  {
+                                         "conditions":  {
+                                                            "options":  {
+                                                                            "caseSensitive":  true,
+                                                                            "leftValue":  "",
+                                                                            "typeValidation":  "strict",
+                                                                            "version":  3
+                                                                        },
+                                                            "conditions":  [
+                                                                               {
+                                                                                   "id":  "b0ceca03-10e8-4f76-b62e-be3568eab5e3",
+                                                                                   "leftValue":  "={{ Number($json.id) }}",
+                                                                                   "rightValue":  0,
+                                                                                   "operator":  {
+                                                                                                    "type":  "number",
+                                                                                                    "operation":  "gt"
+                                                                                                }
+                                                                               }
+                                                                           ],
+                                                            "combinator":  "and"
+                                                        },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.if",
+                      "typeVersion":  2.3,
+                      "position":  [
+                                       -864,
+                                       64
+                                   ],
+                      "id":  "70d08b5b-1654-4cb9-8469-db7836d81f6e",
+                      "name":  "If1"
+                  },
+                  {
+                      "parameters":  {
+                                         "assignments":  {
+                                                             "assignments":  [
+                                                                                 {
+                                                                                     "id":  "800c09c1-096e-45ea-9b23-687955af1b56",
+                                                                                     "name":  "success",
+                                                                                     "value":  true,
+                                                                                     "type":  "boolean"
+                                                                                 },
+                                                                                 {
+                                                                                     "id":  "7bed53b8-1198-4991-bb6a-71e8de64dbe3",
+                                                                                     "name":  "ticketId",
+                                                                                     "value":  "={{ Number($json.id) }}",
+                                                                                     "type":  "number"
+                                                                                 },
+                                                                                 {
+                                                                                     "id":  "81a50610-27a2-4206-ab08-6fada38bf7be",
+                                                                                     "name":  "status",
+                                                                                     "value":  "={{ $json.status }}",
+                                                                                     "type":  "string"
+                                                                                 },
+                                                                                 {
+                                                                                     "id":  "7a1a8b41-4f48-43e2-936d-1428150abc3b",
+                                                                                     "name":  "message",
+                                                                                     "value":  "Ticket ya existente; se devuelve el ticket original",
+                                                                                     "type":  "string"
+                                                                                 }
+                                                                             ]
+                                                         },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.set",
+                      "typeVersion":  3.5,
+                      "position":  [
+                                       480,
+                                       448
+                                   ],
+                      "id":  "5f144c89-9e29-445c-9903-abe9eb4263a2",
+                      "name":  "Edit Fields5"
+                  },
+                  {
+                      "parameters":  {
+                                         "conditions":  {
+                                                            "options":  {
+                                                                            "caseSensitive":  true,
+                                                                            "leftValue":  "",
+                                                                            "typeValidation":  "strict",
+                                                                            "version":  3
+                                                                        },
+                                                            "conditions":  [
+                                                                               {
+                                                                                   "id":  "a9806043-1eac-495d-bbb8-b5faab0dd4a6",
+                                                                                   "leftValue":  "={{ $json.description }}",
+                                                                                   "rightValue":  "={{ $(\u0027Validar entrada\u0027).first().json.body.message }}",
+                                                                                   "operator":  {
+                                                                                                    "type":  "string",
+                                                                                                    "operation":  "equals",
+                                                                                                    "name":  "filter.operator.equals"
+                                                                                                }
+                                                                               }
+                                                                           ],
+                                                            "combinator":  "and"
+                                                        },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.if",
+                      "typeVersion":  2.3,
+                      "position":  [
+                                       256,
+                                       544
+                                   ],
+                      "id":  "5a6f004e-f5df-4422-9b02-deaf4256e8be",
+                      "name":  "If2"
+                  },
+                  {
+                      "parameters":  {
+                                         "assignments":  {
+                                                             "assignments":  [
+                                                                                 {
+                                                                                     "id":  "252d6bf7-1d6a-41a4-ab58-08000ef02d96",
+                                                                                     "name":  "success",
+                                                                                     "value":  false,
+                                                                                     "type":  "boolean"
+                                                                                 },
+                                                                                 {
+                                                                                     "id":  "d02c40c2-4465-482e-be4f-e94d17d7ac5f",
+                                                                                     "name":  "error",
+                                                                                     "value":  "IDEMPOTENCY_CONFLICT",
+                                                                                     "type":  "string"
+                                                                                 },
+                                                                                 {
+                                                                                     "id":  "c2c4c5de-f245-4c3b-a742-e56eb3804393",
+                                                                                     "name":  "message",
+                                                                                     "value":  "La clave Idempotency-Key ya fue utilizada con un contenido diferente.",
+                                                                                     "type":  "string"
+                                                                                 }
+                                                                             ]
+                                                         },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.set",
+                      "typeVersion":  3.5,
+                      "position":  [
+                                       480,
+                                       640
+                                   ],
+                      "id":  "f570292c-8ece-4aaa-b97f-5fce249c2a77",
+                      "name":  "Edit Fields6"
+                  },
+                  {
+                      "parameters":  {
+                                         "schema":  {
+                                                        "__rl":  true,
+                                                        "mode":  "list",
+                                                        "value":  "public"
+                                                    },
+                                         "table":  {
+                                                       "__rl":  true,
+                                                       "value":  "tickets",
+                                                       "mode":  "list",
+                                                       "cachedResultName":  "tickets"
+                                                   },
+                                         "columns":  {
+                                                         "mappingMode":  "defineBelow",
+                                                         "value":  {
+                                                                       "requires_human_review":  true,
+                                                                       "title":  "={{ $json.title }}",
+                                                                       "description":  "={{ $json.description }}",
+                                                                       "requester":  "={{ $json.requester}}",
+                                                                       "category":  "={{ $json.category }}",
+                                                                       "priority":  "={{ $json.priority }}",
+                                                                       "summary":  "={{ $json.summary }}",
+                                                                       "suggested_actions":  "={{ JSON.stringify({ actions: $json.suggestedActions }) }}",
+                                                                       "idempotency_key":  "={{ $json.idempotencyKey }}",
+                                                                       "status":  "={{ $json.status }}"
+                                                                   },
+                                                         "matchingColumns":  [
+                                                                                 "id"
+                                                                             ],
+                                                         "schema":  [
+                                                                        {
+                                                                            "id":  "id",
+                                                                            "displayName":  "id",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  true,
+                                                                            "display":  true,
+                                                                            "type":  "number",
+                                                                            "canBeUsedToMatch":  true,
+                                                                            "removed":  false
+                                                                        },
+                                                                        {
+                                                                            "id":  "title",
+                                                                            "displayName":  "title",
+                                                                            "required":  true,
+                                                                            "defaultMatch":  false,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "canBeUsedToMatch":  true
+                                                                        },
+                                                                        {
+                                                                            "id":  "description",
+                                                                            "displayName":  "description",
+                                                                            "required":  true,
+                                                                            "defaultMatch":  false,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "canBeUsedToMatch":  true
+                                                                        },
+                                                                        {
+                                                                            "id":  "requester",
+                                                                            "displayName":  "requester",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "canBeUsedToMatch":  true
+                                                                        },
+                                                                        {
+                                                                            "id":  "category",
+                                                                            "displayName":  "category",
+                                                                            "required":  true,
+                                                                            "defaultMatch":  false,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "canBeUsedToMatch":  true
+                                                                        },
+                                                                        {
+                                                                            "id":  "priority",
+                                                                            "displayName":  "priority",
+                                                                            "required":  true,
+                                                                            "defaultMatch":  false,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "canBeUsedToMatch":  true
+                                                                        },
+                                                                        {
+                                                                            "id":  "summary",
+                                                                            "displayName":  "summary",
+                                                                            "required":  true,
+                                                                            "defaultMatch":  false,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "canBeUsedToMatch":  true
+                                                                        },
+                                                                        {
+                                                                            "id":  "suggested_actions",
+                                                                            "displayName":  "suggested_actions",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "display":  true,
+                                                                            "type":  "object",
+                                                                            "canBeUsedToMatch":  true
+                                                                        },
+                                                                        {
+                                                                            "id":  "requires_human_review",
+                                                                            "displayName":  "requires_human_review",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "display":  true,
+                                                                            "type":  "boolean",
+                                                                            "canBeUsedToMatch":  true
+                                                                        },
+                                                                        {
+                                                                            "id":  "status",
+                                                                            "displayName":  "status",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "canBeUsedToMatch":  true
+                                                                        },
+                                                                        {
+                                                                            "id":  "created_at",
+                                                                            "displayName":  "created_at",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "display":  true,
+                                                                            "type":  "dateTime",
+                                                                            "canBeUsedToMatch":  true
+                                                                        },
+                                                                        {
+                                                                            "id":  "updated_at",
+                                                                            "displayName":  "updated_at",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "display":  true,
+                                                                            "type":  "dateTime",
+                                                                            "canBeUsedToMatch":  true
+                                                                        },
+                                                                        {
+                                                                            "id":  "idempotency_key",
+                                                                            "displayName":  "idempotency_key",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "canBeUsedToMatch":  true
+                                                                        },
+                                                                        {
+                                                                            "id":  "request_hash",
+                                                                            "displayName":  "request_hash",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "canBeUsedToMatch":  true
+                                                                        }
+                                                                    ],
+                                                         "attemptToConvertTypes":  false,
+                                                         "convertFieldsToString":  false
+                                                     },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.postgres",
+                      "typeVersion":  2.7,
+                      "position":  [
+                                       -192,
+                                       -32
+                                   ],
+                      "id":  "876ab43c-957b-4695-ac50-df45d719341b",
+                      "name":  "Insert rows in a table",
+                      "retryOnFail":  true,
+                      "waitBetweenTries":  2000,
+                      "onError":  "continueErrorOutput"
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "\nconst result = $input.first().json;\n\n// Recuperar el mensaje original del Webhook\nconst original = $(\u0027Webhook\u0027).first().json.body ?? {};\nconst description = original.message ?? original.description ?? \u0027\u0027;\n\nif (typeof description !== \u0027string\u0027 || !description.trim()) {\n  throw new Error(\u0027No se encontrÃ³ el mensaje original del ticket\u0027);\n}\n\n// Parsear la respuesta de Ollama\nlet ticket;\n\ntry {\n  ticket = JSON.parse(result.response);\n} catch {\n  throw new Error(\u0027Ollama devolviÃ³ una respuesta que no es JSON vÃ¡lido\u0027);\n}\n\nif (!ticket || typeof ticket !== \u0027object\u0027 || Array.isArray(ticket)) {\n  throw new Error(\u0027La respuesta de Ollama debe ser un objeto JSON\u0027);\n}\n\n// Normalizar categorÃ­a y prioridad\nconst category =\n  typeof ticket.category === \u0027string\u0027\n    ? ticket.category.trim().toLowerCase()\n    : \u0027\u0027;\n\nconst priority =\n  typeof ticket.priority === \u0027string\u0027\n    ? ticket.priority.trim().toLowerCase()\n    : \u0027\u0027;\n\nconst validCategories = [\n  \u0027hardware\u0027,\n  \u0027software\u0027,\n  \u0027network\u0027,\n  \u0027access\u0027,\n  \u0027security\u0027,\n  \u0027other\u0027,\n];\n\nconst validPriorities = [\n  \u0027low\u0027,\n  \u0027medium\u0027,\n  \u0027high\u0027,\n  \u0027critical\u0027,\n];\n\nif (!validCategories.includes(category)) {\n  throw new Error(\u0027CategorÃ­a de ticket invÃ¡lida\u0027);\n}\n\nif (!validPriorities.includes(priority)) {\n  throw new Error(\u0027Prioridad de ticket invÃ¡lida\u0027);\n}\n\n// Validar y normalizar el resumen\nif (typeof ticket.summary !== \u0027string\u0027 || !ticket.summary.trim()) {\n  throw new Error(\u0027El resumen de Ollama estÃ¡ vacÃ­o o no es texto\u0027);\n}\n\nconst summary = ticket.summary.trim();\n\n// Validar acciones sugeridas\nif (!Array.isArray(ticket.suggestedActions)) {\n  throw new Error(\u0027Las acciones sugeridas deben ser un array\u0027);\n}\n\n\nif (ticket.suggestedActions.length \u003e 10) {\n  throw new Error(\u0027No se permiten mÃ¡s de 10 acciones sugeridas\u0027);\n}\n\nconst suggestedActions = ticket.suggestedActions.map((action) =\u003e {\n  if (typeof action !== \u0027string\u0027 || !action.trim()) {\n    throw new Error(\u0027Cada acciÃ³n sugerida debe ser un texto no vacÃ­o\u0027);\n  }\n\n  const normalizedAction = action.trim();\n\n  if (normalizedAction.length \u003e 500) {\n    throw new Error(\u0027Una acciÃ³n sugerida supera los 500 caracteres\u0027);\n  }\n\n  return normalizedAction;\n});\n\n\nif (typeof ticket.requiresHumanReview !== \u0027boolean\u0027) {\n  throw new Error(\u0027requiresHumanReview debe ser boolean\u0027);\n}\n\n// Preparar datos para PostgreSQL\nreturn [\n  {\n    json: {\n      idempotencyKey: $(\u0027Validar entrada\u0027).first().json.idempotencyKey,\n      title: (original.title ?? description).trim().slice(0, 200),\n      description: description.trim(),\n      requester: original.requester ?? null,\n      category,\n      priority,\n      summary,\n      suggestedActions,\n      requiresHumanReview: ticket.requiresHumanReview,\n      status: \u0027open\u0027,\n    },\n  },\n];\n"
+                                     },
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       -416,
+                                       -128
+                                   ],
+                      "id":  "9e10deff-583e-4ae2-b00d-0ba91f144b55",
+                      "name":  "Code",
+                      "onError":  "continueErrorOutput"
+                  },
+                  {
+                      "parameters":  {
+                                         "conditions":  {
+                                                            "options":  {
+                                                                            "caseSensitive":  true,
+                                                                            "leftValue":  "",
+                                                                            "typeValidation":  "strict",
+                                                                            "version":  3
+                                                                        },
+                                                            "conditions":  [
+                                                                               {
+                                                                                   "id":  "a4de7432-5fba-4d0b-94b0-cbf42c2a7a66",
+                                                                                   "leftValue":  "={{ $json.id }}",
+                                                                                   "rightValue":  0,
+                                                                                   "operator":  {
+                                                                                                    "type":  "number",
+                                                                                                    "operation":  "gt"
+                                                                                                }
+                                                                               }
+                                                                           ],
+                                                            "combinator":  "and"
+                                                        },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.if",
+                      "typeVersion":  2.3,
+                      "position":  [
+                                       256,
+                                       -96
+                                   ],
+                      "id":  "eddce1f7-79fe-401b-bb66-068fa97c50a0",
+                      "name":  "Â¿Ticket recuperado?"
+                  },
+                  {
+                      "parameters":  {
+                                         "assignments":  {
+                                                             "assignments":  [
+                                                                                 {
+                                                                                     "id":  "7dbcdd73-ae20-48ea-b142-dfb74f2c8427",
+                                                                                     "name":  "success",
+                                                                                     "value":  true,
+                                                                                     "type":  "boolean"
+                                                                                 },
+                                                                                 {
+                                                                                     "id":  "d0f8f959-7da0-4874-a604-fae03060762b",
+                                                                                     "name":  "ticketId",
+                                                                                     "value":  "={{ Number($json.id) }}",
+                                                                                     "type":  "number"
+                                                                                 },
+                                                                                 {
+                                                                                     "id":  "444fd4f9-6e8f-4eec-96b8-ec9fd3d8dafe",
+                                                                                     "name":  "status",
+                                                                                     "value":  "={{ $json.status }}",
+                                                                                     "type":  "string"
+                                                                                 },
+                                                                                 {
+                                                                                     "id":  "fb90f341-5a56-4d21-96e3-7e6df037a623",
+                                                                                     "name":  "message",
+                                                                                     "value":  "Ticket ya existente; se devuelve el ticket original",
+                                                                                     "type":  "string"
+                                                                                 }
+                                                                             ]
+                                                         },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.set",
+                      "typeVersion":  3.5,
+                      "position":  [
+                                       480,
+                                       -144
+                                   ],
+                      "id":  "390fa8a3-3188-4565-8a7c-ae3c207eab03",
+                      "name":  "Respuesta ticket recuperado."
+                  },
+                  {
+                      "parameters":  {
+                                         "respondWith":  "json",
+                                         "responseBody":  "={{ $json}}",
+                                         "options":  {
+                                                         "responseCode":  200
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.respondToWebhook",
+                      "typeVersion":  1.5,
+                      "position":  [
+                                       704,
+                                       64
+                                   ],
+                      "id":  "76b030e6-56c2-436c-a532-7eb3039d512d",
+                      "name":  "Response 200"
+                  },
+                  {
+                      "parameters":  {
+                                         "respondWith":  "json",
+                                         "responseBody":  "={{ $json}}",
+                                         "options":  {
+                                                         "responseCode":  503
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.respondToWebhook",
+                      "typeVersion":  1.5,
+                      "position":  [
+                                       704,
+                                       256
+                                   ],
+                      "id":  "6bb55ee9-61fd-4b53-95f8-45cb79d6640d",
+                      "name":  "Response 503"
+                  },
+                  {
+                      "parameters":  {
+                                         "respondWith":  "json",
+                                         "responseBody":  "={{ $json }}",
+                                         "options":  {
+                                                         "responseCode":  409
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.respondToWebhook",
+                      "typeVersion":  1.5,
+                      "position":  [
+                                       704,
+                                       640
+                                   ],
+                      "id":  "9c562b81-842a-437b-82fe-cccfbf099d55",
+                      "name":  "Response 409"
+                  },
+                  {
+                      "parameters":  {
+                                         "respondWith":  "json",
+                                         "responseBody":  "={{ $json}}",
+                                         "options":  {
+                                                         "responseCode":  502
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.respondToWebhook",
+                      "typeVersion":  1.5,
+                      "position":  [
+                                       32,
+                                       -224
+                                   ],
+                      "id":  "c9e41486-ccd5-4e4c-9b31-46a369ebc166",
+                      "name":  "Response 502"
+                  },
+                  {
+                      "parameters":  {
+                                         "respondWith":  "json",
+                                         "responseBody":  "={{ $json }}",
+                                         "options":  {
+                                                         "responseCode":  504
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.respondToWebhook",
+                      "typeVersion":  1.5,
+                      "position":  [
+                                       -192,
+                                       -416
+                                   ],
+                      "id":  "8b5ccb77-9cc8-479f-b241-74498b164d1d",
+                      "name":  "Response 504"
+                  },
+                  {
+                      "parameters":  {
+                                         "assignments":  {
+                                                             "assignments":  [
+                                                                                 {
+                                                                                     "id":  "51cfb516-e8dc-4d60-87d4-e2f5b9dc2fd4",
+                                                                                     "name":  "success",
+                                                                                     "value":  false,
+                                                                                     "type":  "boolean"
+                                                                                 },
+                                                                                 {
+                                                                                     "id":  "03d11c0f-5439-41ee-b3bb-7c844bb87ddb",
+                                                                                     "name":  "error",
+                                                                                     "value":  "DATABASE_ERROR",
+                                                                                     "type":  "string"
+                                                                                 },
+                                                                                 {
+                                                                                     "id":  "fe3ef929-d62b-4527-afa0-92185abfeddd",
+                                                                                     "name":  "message",
+                                                                                     "value":  "No se pudo guardar el ticket. IntentÃ¡ nuevamente mÃ¡s tarde.",
+                                                                                     "type":  "string"
+                                                                                 }
+                                                                             ]
+                                                         },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.set",
+                      "typeVersion":  3.5,
+                      "position":  [
+                                       480,
+                                       64
+                                   ],
+                      "id":  "21551d5a-efbd-48e6-b442-1f519d034396",
+                      "name":  "DATABASE_ERROR"
+                  },
+                  {
+                      "parameters":  {
+                                         "operation":  "executeQuery",
+                                         "query":  "\nSELECT\n    id,\n    idempotency_key,\n    title,\n    description,\n    requester,\n    status,\n    created_at\nFROM tickets\nWHERE idempotency_key = $1;\n",
+                                         "options":  {
+                                                         "queryReplacement":  "={{ $(\u0027Validar entrada\u0027).first().json.idempotencyKey }}"
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.postgres",
+                      "typeVersion":  2.7,
+                      "position":  [
+                                       -1088,
+                                       64
+                                   ],
+                      "id":  "14c59164-0e68-46b7-8e4e-f71010891e96",
+                      "name":  "Buscar ticket existente",
+                      "alwaysOutputData":  true
+                  },
+                  {
+                      "parameters":  {
+                                         "operation":  "executeQuery",
+                                         "query":  "SELECT\n    id,\n    idempotency_key,\n    title,\n    description,\n    status,\n    created_at\nFROM tickets\nWHERE idempotency_key = $1;",
+                                         "options":  {
+                                                         "queryReplacement":  "={{ $(\u0027Code\u0027).first().json.idempotencyKey }}"
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.postgres",
+                      "typeVersion":  2.7,
+                      "position":  [
+                                       0,
+                                       176
+                                   ],
+                      "id":  "89c3b318-2b5f-4eeb-ab41-d310e48e76e7",
+                      "name":  "Buscar ticket existente (recuperaciÃ³n)",
+                      "retryOnFail":  false,
+                      "waitBetweenTries":  2000,
+                      "alwaysOutputData":  true,
+                      "onError":  "continueErrorOutput"
+                  }
+              ],
+    "pinData":  {
+
+                },
+    "connections":  {
+                        "Webhook":  {
+                                        "main":  [
+                                                     [
+                                                         {
+                                                             "node":  "Validar entrada",
+                                                             "type":  "main",
+                                                             "index":  0
+                                                         }
+                                                     ]
+                                                 ]
+                                    },
+                        "HTTP Request":  {
+                                             "main":  [
+                                                          [
+                                                              {
+                                                                  "node":  "Code",
+                                                                  "type":  "main",
+                                                                  "index":  0
+                                                              }
+                                                          ],
+                                                          [
+                                                              {
+                                                                  "node":  "Edit Fields2",
+                                                                  "type":  "main",
+                                                                  "index":  0
+                                                              }
+                                                          ]
+                                                      ]
+                                         },
+                        "If":  {
+                                   "main":  [
+                                                [
+                                                    {
+                                                        "node":  "Buscar ticket existente",
+                                                        "type":  "main",
+                                                        "index":  0
+                                                    }
+                                                ],
+                                                [
+                                                    {
+                                                        "node":  "Edit Fields1",
+                                                        "type":  "main",
+                                                        "index":  0
+                                                    }
+                                                ]
+                                            ]
+                               },
+                        "Edit Fields1":  {
+                                             "main":  [
+                                                          [
+                                                              {
+                                                                  "node":  "Respond to Webhook",
+                                                                  "type":  "main",
+                                                                  "index":  0
+                                                              }
+                                                          ]
+                                                      ]
+                                         },
+                        "Edit Fields":  {
+                                            "main":  [
+                                                         [
+                                                             {
+                                                                 "node":  "Response 200",
+                                                                 "type":  "main",
+                                                                 "index":  0
+                                                             }
+                                                         ]
+                                                     ]
+                                        },
+                        "Edit Fields2":  {
+                                             "main":  [
+                                                          [
+                                                              {
+                                                                  "node":  "Response 504",
+                                                                  "type":  "main",
+                                                                  "index":  0
+                                                              }
+                                                          ]
+                                                      ]
+                                         },
+                        "Edit Fields3":  {
+                                             "main":  [
+                                                          [
+                                                              {
+                                                                  "node":  "Response 502",
+                                                                  "type":  "main",
+                                                                  "index":  0
+                                                              }
+                                                          ]
+                                                      ]
+                                         },
+                        "Validar entrada":  {
+                                                "main":  [
+                                                             [
+                                                                 {
+                                                                     "node":  "If",
+                                                                     "type":  "main",
+                                                                     "index":  0
+                                                                 }
+                                                             ]
+                                                         ]
+                                            },
+                        "If1":  {
+                                    "main":  [
+                                                 [
+                                                     {
+                                                         "node":  "If2",
+                                                         "type":  "main",
+                                                         "index":  0
+                                                     }
+                                                 ],
+                                                 [
+                                                     {
+                                                         "node":  "HTTP Request",
+                                                         "type":  "main",
+                                                         "index":  0
+                                                     }
+                                                 ]
+                                             ]
+                                },
+                        "Edit Fields5":  {
+                                             "main":  [
+                                                          [
+                                                              {
+                                                                  "node":  "Response 200",
+                                                                  "type":  "main",
+                                                                  "index":  0
+                                                              }
+                                                          ]
+                                                      ]
+                                         },
+                        "If2":  {
+                                    "main":  [
+                                                 [
+                                                     {
+                                                         "node":  "Edit Fields5",
+                                                         "type":  "main",
+                                                         "index":  0
+                                                     }
+                                                 ],
+                                                 [
+                                                     {
+                                                         "node":  "Edit Fields6",
+                                                         "type":  "main",
+                                                         "index":  0
+                                                     }
+                                                 ]
+                                             ]
+                                },
+                        "Edit Fields6":  {
+                                             "main":  [
+                                                          [
+                                                              {
+                                                                  "node":  "Response 409",
+                                                                  "type":  "main",
+                                                                  "index":  0
+                                                              }
+                                                          ]
+                                                      ]
+                                         },
+                        "Insert rows in a table":  {
+                                                       "main":  [
+                                                                    [
+                                                                        {
+                                                                            "node":  "Edit Fields",
+                                                                            "type":  "main",
+                                                                            "index":  0
+                                                                        }
+                                                                    ],
+                                                                    [
+                                                                        {
+                                                                            "node":  "Buscar ticket existente (recuperaciÃ³n)",
+                                                                            "type":  "main",
+                                                                            "index":  0
+                                                                        }
+                                                                    ]
+                                                                ]
+                                                   },
+                        "Code":  {
+                                     "main":  [
+                                                  [
+                                                      {
+                                                          "node":  "Insert rows in a table",
+                                                          "type":  "main",
+                                                          "index":  0
+                                                      }
+                                                  ],
+                                                  [
+                                                      {
+                                                          "node":  "Edit Fields3",
+                                                          "type":  "main",
+                                                          "index":  0
+                                                      }
+                                                  ]
+                                              ]
+                                 },
+                        "Â¿Ticket recuperado?":  {
+                                                     "main":  [
+                                                                  [
+                                                                      {
+                                                                          "node":  "Respuesta ticket recuperado.",
+                                                                          "type":  "main",
+                                                                          "index":  0
+                                                                      }
+                                                                  ],
+                                                                  [
+                                                                      {
+                                                                          "node":  "DATABASE_ERROR",
+                                                                          "type":  "main",
+                                                                          "index":  0
+                                                                      }
+                                                                  ]
+                                                              ]
+                                                 },
+                        "Respuesta ticket recuperado.":  {
+                                                             "main":  [
+                                                                          [
+                                                                              {
+                                                                                  "node":  "Response 200",
+                                                                                  "type":  "main",
+                                                                                  "index":  0
+                                                                              }
+                                                                          ]
+                                                                      ]
+                                                         },
+                        "DATABASE_ERROR":  {
+                                               "main":  [
+                                                            [
+                                                                {
+                                                                    "node":  "Response 503",
+                                                                    "type":  "main",
+                                                                    "index":  0
+                                                                }
+                                                            ]
+                                                        ]
+                                           },
+                        "Buscar ticket existente":  {
+                                                        "main":  [
+                                                                     [
+                                                                         {
+                                                                             "node":  "If1",
+                                                                             "type":  "main",
+                                                                             "index":  0
+                                                                         }
+                                                                     ]
+                                                                 ]
+                                                    },
+                        "Buscar ticket existente (recuperaciÃ³n)":  {
+                                                                        "main":  [
+                                                                                     [
+                                                                                         {
+                                                                                             "node":  "Â¿Ticket recuperado?",
+                                                                                             "type":  "main",
+                                                                                             "index":  0
+                                                                                         }
+                                                                                     ],
+                                                                                     [
+                                                                                         {
+                                                                                             "node":  "DATABASE_ERROR",
+                                                                                             "type":  "main",
+                                                                                             "index":  0
+                                                                                         }
+                                                                                     ]
+                                                                                 ]
+                                                                    }
+                    },
+    "active":  false,
+    "settings":  {
+                     "executionOrder":  "v1",
+                     "binaryMode":  "separate"
+                 },
+    "versionId":  "105d122f-6d4f-4711-9958-78284ee94aeb",
+    "meta":  {
+                 "templateCredsSetupCompleted":  true,
+                 "instanceId":  "74e6b5b53352862e15bb8ea3bb3c725db9b0616e47c0a3afdf3b78b4eb06a1ca"
+             },
+    "nodeGroups":  [
+
+                   ],
+    "id":  "8OTqlp52MDyo4drQ",
+    "tags":  [
+
+             ]
+}

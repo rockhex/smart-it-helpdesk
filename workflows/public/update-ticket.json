@@ -1,0 +1,293 @@
+﻿{
+    "name":  "Smart IT Helpdesk: actualizar tickets existentes.",
+    "nodes":  [
+                  {
+                      "parameters":  {
+                                         "httpMethod":  "PATCH",
+                                         "path":  "tickets/:id",
+                                         "responseMode":  "responseNode",
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.webhook",
+                      "typeVersion":  2.2,
+                      "position":  [
+                                       0,
+                                       192
+                                   ],
+                      "id":  "99c1f86b-9ebc-4617-a12e-fe68d7a2ab00",
+                      "name":  "Webhook",
+                      "webhookId":  "1de157de-cdd5-41d7-bb9a-b7c5a6b605cd"
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "\nconst input = $input.first().json;\nconst params = input.params ?? {};\nconst body = input.body ?? {};\n\nconst errors = [];\nconst ticketId = Number(params.id);\n\nif (\n  !params.id ||\n  !Number.isSafeInteger(ticketId) ||\n  ticketId \u003c= 0\n) {\n  errors.push(\u0027El ID del ticket debe ser un entero positivo.\u0027);\n}\n\nconst allowedFields = [\u0027status\u0027, \u0027priority\u0027];\nconst allowedStatuses = [\n  \u0027open\u0027,\n  \u0027in_progress\u0027,\n  \u0027resolved\u0027,\n  \u0027closed\u0027,\n];\nconst allowedPriorities = [\n  \u0027low\u0027,\n  \u0027medium\u0027,\n  \u0027high\u0027,\n  \u0027critical\u0027,\n];\n\nconst suppliedFields = Object.keys(body);\n\nif (suppliedFields.length === 0) {\n  errors.push(\u0027Debe enviar al menos un campo para actualizar.\u0027);\n}\n\nfor (const field of suppliedFields) {\n  if (!allowedFields.includes(field)) {\n    errors.push(`El campo \u0027${field}\u0027 no se puede actualizar.`);\n  }\n}\n\nif (\n  body.status !== undefined \u0026\u0026\n  (\n    typeof body.status !== \u0027string\u0027 ||\n    !allowedStatuses.includes(body.status.toLowerCase())\n  )\n) {\n  errors.push(\u0027El estado enviado no es vÃ¡lido.\u0027);\n}\n\nif (\n  body.priority !== undefined \u0026\u0026\n  (\n    typeof body.priority !== \u0027string\u0027 ||\n    !allowedPriorities.includes(body.priority.toLowerCase())\n  )\n) {\n  errors.push(\u0027La prioridad enviada no es vÃ¡lida.\u0027);\n}\n\nreturn [{\n  json: {\n    ticketId,\n    update: {\n      ...(body.status !== undefined\n        ? { status: body.status.toLowerCase() }\n        : {}),\n      ...(body.priority !== undefined\n        ? { priority: body.priority.toLowerCase() }\n        : {}),\n    },\n    validationError: errors.length\n      ? errors.join(\u0027 \u0027)\n      : null,\n  },\n}];\n"
+                                     },
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       224,
+                                       192
+                                   ],
+                      "id":  "4961f9af-1c08-467b-a5ce-a9983ce59f5f",
+                      "name":  "Code in JavaScript"
+                  },
+                  {
+                      "parameters":  {
+                                         "conditions":  {
+                                                            "options":  {
+                                                                            "caseSensitive":  true,
+                                                                            "leftValue":  "",
+                                                                            "typeValidation":  "strict",
+                                                                            "version":  3
+                                                                        },
+                                                            "conditions":  [
+                                                                               {
+                                                                                   "id":  "c39eb4d6-9049-4b03-9c92-90a29b853ac3",
+                                                                                   "leftValue":  "={{ $json.validationError === null }}",
+                                                                                   "rightValue":  "",
+                                                                                   "operator":  {
+                                                                                                    "type":  "boolean",
+                                                                                                    "operation":  "true",
+                                                                                                    "singleValue":  true
+                                                                                                }
+                                                                               }
+                                                                           ],
+                                                            "combinator":  "and"
+                                                        },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.if",
+                      "typeVersion":  2.3,
+                      "position":  [
+                                       448,
+                                       192
+                                   ],
+                      "id":  "dedba27a-348b-43e8-8070-92b31271044e",
+                      "name":  "If"
+                  },
+                  {
+                      "parameters":  {
+                                         "respondWith":  "json",
+                                         "responseBody":  "={{ {\n  \"success\": false,\n  \"error\": \"VALIDATION_ERROR\",\n  \"message\": $(\"Code in JavaScript\").first().json.validationError\n} }}",
+                                         "options":  {
+                                                         "responseCode":  400
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.respondToWebhook",
+                      "typeVersion":  1.5,
+                      "position":  [
+                                       672,
+                                       288
+                                   ],
+                      "id":  "54fa898c-56d1-450a-96f2-bae4aa41e9a4",
+                      "name":  "error 400"
+                  },
+                  {
+                      "parameters":  {
+                                         "operation":  "executeQuery",
+                                         "query":  "UPDATE tickets\nSET\n    status = COALESCE($2::text, status),\n    priority = COALESCE($3::text, priority)\nWHERE id = $1::bigint\nRETURNING\n    id,\n    title,\n    category,\n    priority,\n    status,\n    summary,\n    requires_human_review;\n",
+                                         "options":  {
+                                                         "queryReplacement":  "={{ [   $json.ticketId,   $json.update.status ?? null,   $json.update.priority ?? null ] }}"
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.postgres",
+                      "typeVersion":  2.7,
+                      "position":  [
+                                       672,
+                                       96
+                                   ],
+                      "id":  "dabeeb22-1067-43ce-a861-df53f8e8b5a0",
+                      "name":  "Execute a SQL query",
+                      "onError":  "continueErrorOutput"
+                  },
+                  {
+                      "parameters":  {
+                                         "respondWith":  "json",
+                                         "responseBody":  "={{ {\n  \"success\": true,\n  \"ticket\": $json\n} }}",
+                                         "options":  {
+                                                         "responseCode":  200
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.respondToWebhook",
+                      "typeVersion":  1.5,
+                      "position":  [
+                                       1120,
+                                       -96
+                                   ],
+                      "id":  "347a0df1-0123-455f-97b2-fe2d9cc5be6f",
+                      "name":  "Respond to Webhook"
+                  },
+                  {
+                      "parameters":  {
+                                         "conditions":  {
+                                                            "options":  {
+                                                                            "caseSensitive":  true,
+                                                                            "leftValue":  "",
+                                                                            "typeValidation":  "strict",
+                                                                            "version":  3
+                                                                        },
+                                                            "conditions":  [
+                                                                               {
+                                                                                   "id":  "50ba09a4-6647-4ae1-bfba-86f849310b38",
+                                                                                   "leftValue":  "={{ $json.id !== undefined \u0026\u0026 $json.id !== null }}",
+                                                                                   "rightValue":  "",
+                                                                                   "operator":  {
+                                                                                                    "type":  "boolean",
+                                                                                                    "operation":  "true",
+                                                                                                    "singleValue":  true
+                                                                                                }
+                                                                               }
+                                                                           ],
+                                                            "combinator":  "and"
+                                                        },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.if",
+                      "typeVersion":  2.3,
+                      "position":  [
+                                       896,
+                                       0
+                                   ],
+                      "id":  "8eaa337d-9e4b-4cdb-b31d-2b2360c3ddd4",
+                      "name":  "If1"
+                  },
+                  {
+                      "parameters":  {
+                                         "respondWith":  "json",
+                                         "responseBody":  "={{ {\n  \"success\": false,\n  \"error\": \"TICKET_NOT_FOUND\",\n  \"message\": \"No existe un ticket con el ID solicitado.\"\n} }}",
+                                         "options":  {
+                                                         "responseCode":  404
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.respondToWebhook",
+                      "typeVersion":  1.5,
+                      "position":  [
+                                       1120,
+                                       96
+                                   ],
+                      "id":  "b82b4e13-5030-41b4-9745-1a6697a80306",
+                      "name":  "Error 404"
+                  },
+                  {
+                      "parameters":  {
+                                         "respondWith":  "json",
+                                         "responseBody":  "={{ {\n  \"success\": false,\n  \"error\": \"DATABASE_ERROR\",\n  \"message\": \"No se pudo actualizar el ticket. IntÃ©ntalo nuevamente.\"\n} }}",
+                                         "options":  {
+                                                         "responseCode":  500
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.respondToWebhook",
+                      "typeVersion":  1.5,
+                      "position":  [
+                                       896,
+                                       192
+                                   ],
+                      "id":  "358d045c-964d-489e-a8e1-878fa7da75f9",
+                      "name":  "Respond to Webhook1"
+                  }
+              ],
+    "pinData":  {
+
+                },
+    "connections":  {
+                        "Webhook":  {
+                                        "main":  [
+                                                     [
+                                                         {
+                                                             "node":  "Code in JavaScript",
+                                                             "type":  "main",
+                                                             "index":  0
+                                                         }
+                                                     ]
+                                                 ]
+                                    },
+                        "Code in JavaScript":  {
+                                                   "main":  [
+                                                                [
+                                                                    {
+                                                                        "node":  "If",
+                                                                        "type":  "main",
+                                                                        "index":  0
+                                                                    }
+                                                                ]
+                                                            ]
+                                               },
+                        "If":  {
+                                   "main":  [
+                                                [
+                                                    {
+                                                        "node":  "Execute a SQL query",
+                                                        "type":  "main",
+                                                        "index":  0
+                                                    }
+                                                ],
+                                                [
+                                                    {
+                                                        "node":  "error 400",
+                                                        "type":  "main",
+                                                        "index":  0
+                                                    }
+                                                ]
+                                            ]
+                               },
+                        "Execute a SQL query":  {
+                                                    "main":  [
+                                                                 [
+                                                                     {
+                                                                         "node":  "If1",
+                                                                         "type":  "main",
+                                                                         "index":  0
+                                                                     }
+                                                                 ],
+                                                                 [
+                                                                     {
+                                                                         "node":  "Respond to Webhook1",
+                                                                         "type":  "main",
+                                                                         "index":  0
+                                                                     }
+                                                                 ]
+                                                             ]
+                                                },
+                        "If1":  {
+                                    "main":  [
+                                                 [
+                                                     {
+                                                         "node":  "Respond to Webhook",
+                                                         "type":  "main",
+                                                         "index":  0
+                                                     }
+                                                 ],
+                                                 [
+                                                     {
+                                                         "node":  "Error 404",
+                                                         "type":  "main",
+                                                         "index":  0
+                                                     }
+                                                 ]
+                                             ]
+                                }
+                    },
+    "active":  false,
+    "settings":  {
+                     "executionOrder":  "v1",
+                     "binaryMode":  "separate"
+                 },
+    "versionId":  "b1f1390b-0df6-4bf0-bc5b-5e5a97e9fecb",
+    "meta":  {
+                 "templateCredsSetupCompleted":  true,
+                 "instanceId":  "74e6b5b53352862e15bb8ea3bb3c725db9b0616e47c0a3afdf3b78b4eb06a1ca"
+             },
+    "nodeGroups":  [
+
+                   ],
+    "id":  "5jvfeOrOmEYtiJR5",
+    "tags":  [
+
+             ]
+}
